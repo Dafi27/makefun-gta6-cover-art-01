@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palm Heat Cover Lab — GTA-style cover art maker</title>
+<link rel="icon" href="data:,">
+<style>
+  @font-face { font-family: 'Anton'; src: url('fonts/Anton-Regular.ttf') format('truetype'); font-display: swap; }
+  @font-face { font-family: 'Pacifico'; src: url('fonts/Pacifico-Regular.ttf') format('truetype'); font-display: swap; }
+  :root {
+    --bg: #12081f; --panel: #1d1030; --panel2: #261640; --line: #3d2358;
+    --ink: #f5eefc; --muted: #b9a6cf; --pink: #ff2e88; --cyan: #00e5ff;
+    --orange: #ff9a3c; --gold: #ffd166; --ok: #3ddc97;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  header.top { padding: 18px 22px 10px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(90deg, #2a0f3d, #12081f 60%); }
+  header.top h1 { margin: 0; font-family: 'Anton', 'Arial Black', sans-serif; font-size: 34px; letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--orange) 40%, var(--pink) 75%, var(--cyan));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header.top p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .wrap { display: flex; gap: 18px; padding: 16px 22px 24px; align-items: flex-start; }
+  aside.controls { width: 320px; flex: none; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px; }
+  aside.controls h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted);
+    margin: 18px 0 8px; }
+  aside.controls h2:first-child { margin-top: 0; }
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .thumbs img, .thumbs canvas { width: 72px; height: 54px; object-fit: cover; border-radius: 6px; cursor: pointer;
+    border: 2px solid transparent; background: #000; }
+  .thumbs .sel { border-color: var(--cyan); }
+  .thumbs .ph { width: 72px; height: 54px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    background: #2a1844; color: var(--muted); font-size: 11px; text-align: center; cursor: pointer; border: 2px dashed var(--line); }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  button { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  button:hover { border-color: var(--pink); }
+  button.active { background: var(--pink); border-color: var(--pink); color: #fff; font-weight: 700; }
+  button.primary { background: linear-gradient(90deg, var(--pink), var(--orange)); border: none; font-weight: 800;
+    font-size: 15px; padding: 12px 18px; width: 100%; }
+  button.primary:hover { filter: brightness(1.12); }
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sw { width: 44px; height: 30px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
+  .sw.sel { border-color: #fff; }
+  label.row { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 13px; margin: 8px 0; color: var(--ink); }
+  label.row input[type="text"] { flex: 1; background: #12081f; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 9px; font-size: 14px; }
+  input[type="range"] { width: 150px; accent-color: var(--pink); }
+  input[type="checkbox"] { accent-color: var(--pink); width: 16px; height: 16px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  section.stage { flex: 1; min-width: 0; }
+  .canvasbox { background: #0a0514; border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+    display: flex; justify-content: center; }
+  #preview { max-width: 100%; height: auto; border-radius: 4px; cursor: grab; touch-action: none;
+    box-shadow: 0 12px 40px rgba(0,0,0,.55); }
+  #preview.dragging { cursor: grabbing; }
+  .statusbar { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+  #status { color: var(--ok); }
+  footer { padding: 0 22px 20px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+  .drop { border: 2px dashed var(--line); border-radius: 8px; padding: 10px; text-align: center; color: var(--muted);
+    font-size: 12px; margin-top: 8px; }
+  .drop.over { border-color: var(--cyan); color: var(--cyan); }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>PALM HEAT COVER LAB</h1>
+  <p>Turn any photo and a caption into GTA-style poster cover art. Runs fully offline — your photos never leave this machine.</p>
+</header>
+<div class="wrap">
+  <aside class="controls">
+    <h2>1 · Photos</h2>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="btnrow" style="margin-top:8px">
+      <button id="uploadBtn" type="button">Upload photos…</button>
+      <button id="sampleBtn" type="button">Load sample photo</button>
+    </div>
+    <input id="fileInput" type="file" accept="image/*" multiple hidden>
+    <div class="drop" id="dropZone">…or drop image files here</div>
+    <p class="hint">Click a thumbnail to put that photo in the selected panel. Click a panel on the cover to select it, then drag to move the photo and scroll to zoom.</p>
+
+    <h2>2 · Layout</h2>
+    <div class="btnrow" id="layoutRow">
+      <button type="button" data-layout="fullbleed">Full-bleed</button>
+      <button type="button" data-layout="grid4" class="active">4-panel grid</button>
+      <button type="button" data-layout="hero3">Hero + 3</button>
+      <button type="button" data-layout="nine">Nine-panel</button>
+    </div>
+
+    <h2>3 · Colour grade</h2>
+    <div class="swatches" id="gradeRow"></div>
+    <p class="hint" id="gradeHint"></p>
+
+    <h2>4 · Caption</h2>
+    <label class="row">Title <input type="text" id="titleInput" value="PALM HEAT" maxlength="24"></label>
+    <label class="row">Subtitle <input type="text" id="subInput" value="chasing the sunset" maxlength="48"></label>
+    <label class="row">Title size <input type="range" id="titleSize" min="60" max="160" value="110"></label>
+    <label class="row">Title colour
+      <span class="swatches" id="titleColors">
+        <span class="sw sel" data-c="#ffffff" style="background:#fff"></span>
+        <span class="sw" data-c="#ffd166" style="background:#ffd166"></span>
+        <span class="sw" data-c="#ff2e88" style="background:#ff2e88"></span>
+        <span class="sw" data-c="#00e5ff" style="background:#00e5ff"></span>
+      </span>
+    </label>
+    <label class="row">Title position
+      <span class="btnrow">
+        <button type="button" id="posTop">Top</button>
+        <button type="button" id="posBottom" class="active">Bottom</button>
+      </span>
+    </label>
+    <label class="row"><span>Title band (dark strip)</span><input type="checkbox" id="bandChk" checked></label>
+
+    <h2>5 · Finish</h2>
+    <label class="row"><span>White frame</span><input type="checkbox" id="frameChk"></label>
+    <label class="row">Panel gap <input type="range" id="gapRange" min="0" max="30" value="10"></label>
+    <label class="row">Grain <input type="range" id="grainRange" min="0" max="100" value="35"></label>
+    <label class="row"><span>Vignette</span><input type="checkbox" id="vigChk" checked></label>
+    <label class="row">Selected panel zoom <input type="range" id="zoomRange" min="100" max="300" value="100"></label>
+    <div class="btnrow"><button type="button" id="resetCrop">Reset selected panel crop</button>
+    <button type="button" id="shuffleBtn">🎲 Surprise me</button></div>
+
+    <h2>6 · Export</h2>
+    <div class="btnrow" id="sizeRow">
+      <button type="button" data-size="1080x1080" class="active">1080 × 1080</button>
+      <button type="button" data-size="1080x1350">1080 × 1350</button>
+      <button type="button" data-size="1920x1080">1920 × 1080</button>
+    </div>
+    <div style="margin-top:10px"><button type="button" class="primary" id="exportBtn">⬇ Export cover as PNG</button></div>
+    <div style="margin-top:8px"><button type="button" id="exportAllBtn">⬇ Export all 3 sizes at once</button></div>
+    <p class="hint">Exports the exact post size you picked, ready to share.</p>
+  </aside>
+
+  <section class="stage">
+    <div class="canvasbox"><canvas id="preview" width="860" height="860"></canvas></div>
+    <div class="statusbar"><span id="photoInfo">No photo yet</span><span id="status"></span></div>
+  </section>
+</div>
+<footer>
+  Original design by Palm Heat Cover Lab. No Rockstar Games logo, artwork or fonts are used.
+  Title font Anton and script font Pacifico are licensed under the SIL Open Font License 1.1 (see app/fonts/OFL.txt).
+  Everything runs locally in your browser; no photo is ever uploaded.
+</footer>
+<script src="app.js"></script>
+</body>
+</html>
