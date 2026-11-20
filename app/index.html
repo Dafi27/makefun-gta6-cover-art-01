@@ -3,97 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Palm Heat Cover Lab — GTA-style cover art maker</title>
+<title>Palm Heat Cover Lab — GTA VI style cover maker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff2e88'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='20' font-weight='bold' text-anchor='middle' fill='%23ffffff'%3EP%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-main">PALM HEAT</span>
-    <span class="brand-sub">Cover Lab</span>
+<header id="topbar">
+  <div id="brand">
+    <span id="brand-mark">PALM HEAT</span>
+    <span id="brand-sub">Cover Lab</span>
   </div>
-  <p class="tagline">Turn any photo into a Vice City sunset cover. Offline, on your machine, no uploads.</p>
+  <p id="tagline">Turn any photo into a Vice City sunset cover. Offline — your photos never leave this machine.</p>
 </header>
 
-<main class="workspace">
-  <section class="stage-col">
-    <div class="canvas-wrap">
-      <canvas id="cover" width="900" height="900" aria-label="Cover preview"></canvas>
+<main id="workbench">
+  <section id="stage">
+    <canvas id="cover" width="900" height="900" aria-label="Cover preview"></canvas>
+    <p id="hint">Drag on the preview to move the photo inside its panel. Scroll over a panel to zoom it.</p>
+    <div id="export-row">
+      <button class="export-btn" data-export="1080x1080" type="button">Export 1080 &times; 1080</button>
+      <button class="export-btn" data-export="1080x1350" type="button">Export 1080 &times; 1350</button>
+      <button class="export-btn" data-export="1920x1080" type="button">Export 1920 &times; 1080</button>
     </div>
-    <div class="panel-strip" id="panelStrip" aria-label="Panels"></div>
-    <p class="hint" id="statusLine">Pick a sample scene or upload a photo to begin.</p>
+    <p id="export-note">Exports download as PNG files, ready to post.</p>
   </section>
 
-  <section class="controls-col">
-    <div class="card">
-      <h2>Photos</h2>
-      <div class="row">
-        <label class="btn file-btn">Upload photos
-          <input type="file" id="upload" accept="image/*" multiple hidden>
-        </label>
-        <button class="btn ghost" id="clearPhotos" type="button">Clear</button>
-      </div>
-      <div class="scene-row" id="sceneRow" aria-label="Sample scenes"></div>
-      <div class="thumb-row" id="thumbRow" aria-label="Your photos"></div>
-    </div>
-
-    <div class="card">
-      <h2>Caption</h2>
-      <label class="field">Title
-        <input type="text" id="titleInput" value="PALM HEAT" maxlength="24">
-      </label>
-      <label class="field">Subtitle
-        <input type="text" id="subtitleInput" value="Neon nights in Leonida" maxlength="48">
-      </label>
-      <label class="field">Badge
-        <input type="text" id="badgeInput" value="LEONIDA • 2026" maxlength="24">
-      </label>
-    </div>
-
-    <div class="card">
+  <aside id="controls">
+    <section class="panel-box" id="layout-box">
       <h2>Layout</h2>
-      <div class="chip-row" id="layoutRow"></div>
-    </div>
-
-    <div class="card">
-      <h2>Colour grade</h2>
-      <div class="chip-row" id="gradeRow"></div>
-    </div>
-
-    <div class="card">
-      <h2>Selected panel</h2>
-      <p class="panel-name" id="panelName">Panel 1</p>
-      <label class="field">Fill
-        <select id="panelFill"></select>
-      </label>
-      <label class="field">Zoom <span class="val" id="zoomVal">100%</span>
-        <input type="range" id="zoomRange" min="100" max="260" value="100">
-      </label>
-      <label class="field">Pan sideways <span class="val" id="panXVal">0</span>
-        <input type="range" id="panXRange" min="-100" max="100" value="0">
-      </label>
-      <label class="field">Pan up / down <span class="val" id="panYVal">0</span>
-        <input type="range" id="panYRange" min="-100" max="100" value="0">
-      </label>
-    </div>
-
-    <div class="card export-card">
-      <h2>Export PNG</h2>
-      <div class="export-row">
-        <button class="btn" data-size="1080x1080" type="button">1080 × 1080</button>
-        <button class="btn" data-size="1080x1350" type="button">1080 × 1350</button>
-        <button class="btn" data-size="1920x1080" type="button">1920 × 1080</button>
+      <div class="choice-row" id="layout-choices">
+        <button class="choice is-active" data-layout="hero" type="button">Hero Grid</button>
+        <button class="choice" data-layout="quad" type="button">Four Panel</button>
+        <button class="choice" data-layout="bleed" type="button">Full Bleed</button>
       </div>
-      <button class="btn accent wide" id="exportAll" type="button">Export all three sizes</button>
-      <p class="fineprint">Exports are drawn fresh at full size on your machine. No servers, no watermark.</p>
-    </div>
-  </section>
+      <p class="choice-desc" id="layout-desc">One big hero panel over three small ones — the classic poster.</p>
+    </section>
+
+    <section class="panel-box" id="grade-box">
+      <h2>Grade</h2>
+      <div class="choice-row" id="grade-choices">
+        <button class="choice is-active" data-grade="sunset" type="button">Vice Sunset</button>
+        <button class="choice" data-grade="neon" type="button">Neon Nights</button>
+        <button class="choice" data-grade="gold" type="button">Golden Hour</button>
+        <button class="choice" data-grade="noir" type="button">Mono Noir</button>
+      </div>
+      <p class="choice-desc" id="grade-desc">Warm orange and pink, straight off the boulevard at dusk.</p>
+    </section>
+
+    <section class="panel-box" id="caption-box">
+      <h2>Caption</h2>
+      <label class="field-label" for="title-input">Title</label>
+      <input id="title-input" type="text" value="NEON SHORE" maxlength="24" autocomplete="off">
+      <label class="field-label" for="subtitle-input">Subtitle</label>
+      <input id="subtitle-input" type="text" value="welcome to vice city" maxlength="40" autocomplete="off">
+      <label class="field-label" for="badge-input">Badge</label>
+      <input id="badge-input" type="text" value="LEONIDA" maxlength="16" autocomplete="off">
+    </section>
+
+    <section class="panel-box" id="photos-box">
+      <h2>Photos</h2>
+      <p class="choice-desc">One photo fills every panel, or give each panel its own. Drag on the preview to reposition.</p>
+      <div class="photo-actions">
+        <button id="demo-photo" type="button">Use demo photo</button>
+        <button id="same-photo" type="button">One photo, all panels</button>
+      </div>
+      <div id="panel-slots"></div>
+    </section>
+  </aside>
 </main>
 
-<footer class="foot">
-  <p>Palm Heat Cover Lab — original art, original lettering. Anton and Pacifico fonts under the SIL Open Font License. No Rockstar Games artwork, logos or fonts.</p>
+<footer id="foot">
+  <p>Palm Heat Cover Lab — an original fan-made tool. No Rockstar Games logo, artwork or fonts. Lettering set in Anton and Pacifico under the SIL Open Font License.</p>
 </footer>
 
-<script type="module" src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
